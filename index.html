@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whack-a-Mole Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .game-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-size: 18px;
+        }
+        
+        .mole-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px auto;
+            width: 300px;
+        }
+        
+        .mole-hole {
+            width: 80px;
+            height: 80px;
+            background-color: #8B4513;
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+            margin: 0 auto;
+            overflow: hidden;
+            transition: transform 0.1s;
+        }
+        
+        .mole-hole:active {
+            transform: scale(0.95);
+        }
+        
+        .mole {
+            width: 60px;
+            height: 60px;
+            background-color: #A0522D;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            transition: all 0.2s;
+        }
+        
+        .active .mole {
+            display: block;
+            animation: popUp 0.3s;
+        }
+        
+        .hit .mole {
+            background-color: #ff0000;
+            transform: translate(-50%, -50%) scale(0.9);
+        }
+        
+        #start-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: background-color 0.3s;
+        }
+        
+        #start-btn:hover {
+            background-color: #45a049;
+        }
+        
+        #start-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .score {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .time {
+            color: #f44336;
+            font-weight: bold;
+        }
+        
+        @keyframes popUp {
+            0% { transform: translate(-50%, 100%); }
+            100% { transform: translate(-50%, -50%); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Whack-a-Mole Game</h1>
+        
+        <button id="start-btn">Start Game</button>
+        
+        <div class="game-info">
+            <div>Score: <span class="score" id="score">0</span></div>
+            <div>Time: <span class="time" id="time">60</span>s</div>
+        </div>
+        
+        <div class="mole-grid">
+            <div class="mole-hole" data-index="0">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-index="1">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-index="2">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-index="3">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-index="4">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-index="5">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-index="6">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-index="7">
+                <div class="mole"></div>
+            </div>
+            <div class="mole-hole" data-index="8">
+                <div class="mole"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startBtn = document.getElementById('start-btn');
+            const moleHoles = document.querySelectorAll('.mole-hole');
+            const scoreDisplay = document.getElementById('score');
+            const timerDisplay = document.getElementById('time');
+            
+            let gameActive = false;
+            let score = 0;
+            let timeLeft = 60;
+            let activeMoles = [];
+            let gameTimer;
+            let moleTimer;
+            let isFirstPhase = true;
+            
+            startBtn.addEventListener('click', function() {
+                if (gameActive) return;
+                
+                score = 0;
+                timeLeft = 60;
+                activeMoles = [];
+                isFirstPhase = true;
+                scoreDisplay.textContent = '0';
+                timerDisplay.textContent = '60';
+                
+                moleHoles.forEach(hole => {
+                    hole.classList.remove('active');
+                    hole.classList.remove('hit');
+                });
+                
+                gameActive = true;
+                startBtn.disabled = true;
+                
+                startGameTimer();
+                startMoleTimer();
+            });
+            
+            moleHoles.forEach(hole => {
+                hole.addEventListener('click', function() {
+                    if (!gameActive) return;
+                    
+                    const moleIndex = parseInt(this.getAttribute('data-index'));
+                    
+                    if (activeMoles.includes(moleIndex)) {
+                        score += 10;
+                        scoreDisplay.textContent = score;
+                        this.classList.add('hit');
+                        
+                        activeMoles = activeMoles.filter(index => index !== moleIndex);
+                        this.classList.remove('active');
+                        
+                        setTimeout(() => {
+                            this.classList.remove('hit');
+                        }, 300);
+                    }
+                });
+            });
+            
+            function showRandomMoles() {
+                if (!gameActive) return;
+                
+                if (timeLeft <= 30 && isFirstPhase) {
+                    isFirstPhase = false;
+                }
+                
+                moleHoles.forEach((hole, index) => {
+                    if (!activeMoles.includes(index)) {
+                        hole.classList.remove('active');
+                    }
+                });
+                
+                const molesToShow = isFirstPhase ? 1 : 2;
+                
+                while (activeMoles.length < molesToShow) {
+                    const availableHoles = Array.from(moleHoles.keys())
+                        .filter(index => !activeMoles.includes(index));
+                    
+                    if (availableHoles.length === 0) break;
+                    
+                    const newMoleIndex = availableHoles[Math.floor(Math.random() * availableHoles.length)];
+                    activeMoles.push(newMoleIndex);
+                    moleHoles[newMoleIndex].classList.add('active');
+                    
+                    setTimeout(() => {
+                        if (moleHoles[newMoleIndex].classList.contains('active')) {
+                            moleHoles[newMoleIndex].classList.remove('active');
+                            activeMoles = activeMoles.filter(index => index !== newMoleIndex);
+                        }
+                    }, 800);
+                }
+            }
+            
+            function startGameTimer() {
+                clearInterval(gameTimer);
+                gameTimer = setInterval(() => {
+                    timeLeft--;
+                    timerDisplay.textContent = timeLeft;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(gameTimer);
+                        clearInterval(moleTimer);
+                        gameActive = false;
+                        startBtn.disabled = false;
+                        
+                        activeMoles.forEach(index => {
+                            moleHoles[index].classList.remove('active');
+                        });
+                        activeMoles = [];
+                        
+                        alert('Game Over! Final Score: ' + score);
+                    }
+                }, 1000);
+            }
+            
+            function startMoleTimer() {
+                clearInterval(moleTimer);
+                showRandomMoles();
+                moleTimer = setInterval(showRandomMoles, 500);
+            }
+        });
+    </script>
+</body>
+</html>
