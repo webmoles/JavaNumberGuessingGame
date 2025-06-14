@@ -91,7 +91,7 @@ public class NumberGuessingGame {
                     }
                 }
             } catch (NumberFormatException e) {
-                System.out.println(RED + "Invalid input. Please enter a valid number or 'exit'." + RESET);
+                System.out.println(RED + "Invalid input. Please guess a valid number or input 'exit'." + RESET);
             }
         }
     }
